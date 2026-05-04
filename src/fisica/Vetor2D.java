@@ -1,5 +1,6 @@
-package infectados.src;
-public class Vetor2D{
+package fisica;
+
+public class Vetor2D {
     private double x, y;
 
     public Vetor2D(double x, double y) {

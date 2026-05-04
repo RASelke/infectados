@@ -1,4 +1,6 @@
-package infectados.src;
+package models;
+
+import fisica.Vetor2D;
 
 public class Pessoa extends Entidade {
     private boolean vacinado;
@@ -23,15 +25,15 @@ public class Pessoa extends Entidade {
     public void atualizarSaude() {
         if (estado == EstadoSaude.INFECTADO){
             tempoInfectado++;
-
-            double chanceMorrer = vacinado ? 0.001 : 0.01;
+            double chanceMorrer = vacinado ? 0.001 : 0.005;
+            
             if (Math.random() < chanceMorrer){
                 estado = EstadoSaude.MORTO;
                 movimento.setX(0);
                 movimento.setY(0);
             }
-
-            if (tempoInfectado > 500 && estado != EstadoSaude.MORTO) {
+            
+            if (tempoInfectado > 700 && estado != EstadoSaude.MORTO) {
                 estado = EstadoSaude.RECUPERADO;
             }
         }

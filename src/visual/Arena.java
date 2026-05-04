@@ -1,6 +1,11 @@
-package infectados.src;
+package visual;
+
 import javax.swing.JPanel;
 import javax.swing.Timer;
+
+import fisica.Vetor2D;
+import models.EstadoSaude;
+import models.Pessoa;
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -16,7 +21,7 @@ public class Arena extends JPanel {
         populacao = new ArrayList<>();
         simulacaoRodando = true;
         
-        popularArena(40, 40, 5);
+        popularArena(30, 30, 30);
 
         timer = new Timer(16, e -> {
             if (simulacaoRodando) {
@@ -32,7 +37,7 @@ public class Arena extends JPanel {
         for (int i = 0; i < qtdInfectados; i++) {
             Vetor2D posInicial = new Vetor2D(400, 300); // Nasce no meio da tela
             Vetor2D velInicial = new Vetor2D(Math.random() * 4 - 2, Math.random() * 4 - 2); // Velocidade aleatória
-            populacao.add(new Pessoa(10, posInicial, velInicial, false, EstadoSaude.INFECTADO));
+            populacao.add(new Pessoa(10, posInicial, velInicial, true, EstadoSaude.INFECTADO));
         }
 
         // Criando os saudáveis vacinados
@@ -61,10 +66,16 @@ public class Arena extends JPanel {
             for (int j = i + 1; j < populacao.size(); j++) {
                 Pessoa p1 = populacao.get(i);
                 Pessoa p2 = populacao.get(j);
+                
+                if (p1.getEstado() == EstadoSaude.MORTO || p2.getEstado() == EstadoSaude.MORTO) {
+                    continue; 
+                }
 
                 if (p1.verificaColisao(p2)) {
                     p1.interagir(p2);
                     p2.interagir(p1);
+                    
+                    p1.resolverColisaoFisica(p2);
                 }
             }
         }
@@ -93,6 +104,14 @@ public class Arena extends JPanel {
         // Fundo da arena
         g.setColor(Color.WHITE);
         g.fillRect(0, 0, getWidth(), getHeight());
+        
+        // --- COMEÇO DA NOVA BORDA VISUAL ---
+        int margem = 20; // A mesma margem que usamos na Entidade
+        g.setColor(Color.BLACK); // Cor da nossa borda
+        
+        // Desenha um retângulo vazio que representa a área útil (x, y, largura, altura)
+        g.drawRect(margem, margem, 800 - (margem * 2), 600 - (margem * 2) - 40);
+        // --- FIM DA NOVA BORDA VISUAL ---
 
         // Desenhar cada pessoa
         for (Pessoa p : populacao) {
@@ -113,8 +132,8 @@ public class Arena extends JPanel {
             }
 
             int raio = 10; // O tamanho da entidade
-            int x = (int) p.posicao.getX();
-            int y = (int) p.posicao.getY();
+            int x = (int) p.getPosicao().getX();
+            int y = (int) p.getPosicao().getY();
             
             // Desenha a bolinha centralizada
             g.fillOval(x - raio, y - raio, raio * 2, raio * 2);
