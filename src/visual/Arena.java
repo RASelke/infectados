@@ -13,11 +13,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.awt.Toolkit;
 import java.awt.Dimension;
+import javax.swing.JOptionPane;
 
 public class Arena extends JPanel {
     private List<Pessoa> populacao;
     private boolean simulacaoRodando;
     private Timer timer;
+    
+	private int inicialVacinados;
+	private int inicialNaoVacinados;
+	private int inicialInfectados;
     
     // Pega o tamanho do monitor
     public static final Dimension TELA = Toolkit.getDefaultToolkit().getScreenSize();
@@ -27,11 +32,15 @@ public class Arena extends JPanel {
     // Velocidade do jogo
     public static final int FPS = 60;
 
-    public Arena() {
+    public Arena(int inicialVacinados, int inicialNaoVacinados, int inicialInfectados) {
+    	this.inicialVacinados = inicialInfectados;
+    	this.inicialNaoVacinados = inicialNaoVacinados;
+    	this.inicialInfectados = inicialVacinados;
+    	
         populacao = new ArrayList<>();
         simulacaoRodando = true;
         
-        popularArena(30, 500, 30);
+        popularArena(inicialVacinados, inicialNaoVacinados, inicialInfectados);
         
         int delay = 1000 / FPS;
         timer = new Timer(delay, e -> {
@@ -44,7 +53,7 @@ public class Arena extends JPanel {
     }
 
     public void popularArena(int qtdVacinados, int qtdNaoVacinados, int qtdInfectados) {
-        // Criando os infectados
+    	// Criando os infectados
         for (int i = 0; i < qtdInfectados; i++) {
             Vetor2D posInicial = new Vetor2D(LARGURA / 2.0, ALTURA / 2.0); // Nasce no meio da tela
             Vetor2D velInicial = new Vetor2D(Math.random() * 4 - 2, Math.random() * 4 - 2); // Velocidade aleatória
@@ -95,7 +104,7 @@ public class Arena extends JPanel {
         if (verificarFimDeJogo()) {
             simulacaoRodando = false;
             timer.stop();
-            System.out.println("Simulação Encerrada! Exibir estatísticas aqui.");
+            exibirEstatisticas();
         }
     }
 
@@ -106,6 +115,55 @@ public class Arena extends JPanel {
             }
         }
         return true;
+    }
+    
+    public void exibirEstatisticas() {
+        // Contadores para Vacinados
+        int mortosVacinados = 0;
+        int recuperadosVacinados = 0;
+        int ilesosVacinados = 0; // Suscetíveis que nunca pegaram a doença
+
+        // Contadores para NÃO Vacinados
+        int mortosNaoVacinados = 0;
+        int recuperadosNaoVacinados = 0;
+        int ilesosNaoVacinados = 0;
+
+        // Varre a população atual e classifica cada um
+        for (Pessoa p : populacao) {
+            if (p.isVacinado()) {
+                if (p.getEstado() == EstadoSaude.MORTO) mortosVacinados++;
+                else if (p.getEstado() == EstadoSaude.RECUPERADO) recuperadosVacinados++;
+                else if (p.getEstado() == EstadoSaude.SUSCETIVEL) ilesosVacinados++;
+            } else {
+                if (p.getEstado() == EstadoSaude.MORTO) mortosNaoVacinados++;
+                else if (p.getEstado() == EstadoSaude.RECUPERADO) recuperadosNaoVacinados++;
+                else if (p.getEstado() == EstadoSaude.SUSCETIVEL) ilesosNaoVacinados++;
+            }
+        }
+
+        // Monta o texto do relatório de forma estruturada
+        String relatorio ="Fim da Simulação"
+                + "População Inicial:\n"
+                + "  - Vacinados Saudáveis: " + inicialVacinados + "\n"
+                + "  - Não Vacinados Saudáveis: " + inicialNaoVacinados + "\n"
+                + "  - Pacientes Zero (Infectados): " + inicialInfectados + "\n"
+                + "  - TOTAL: " + (inicialVacinados + inicialNaoVacinados + inicialInfectados) + "\n\n"
+                
+                + "Resultados - VACINADOS:\n"
+                + "  - Sobreviveram sem pegar: " + ilesosVacinados + "\n"
+                + "  - Pegaram, mas se Recuperaram: " + recuperadosVacinados + "\n"
+                + "  - Óbitos: " + mortosVacinados + "\n\n"
+                
+                + "Resultados - NÃO VACINADOS (Inclui Paciente Zero):\n"
+                + "  - Sobreviveram sem pegar: " + ilesosNaoVacinados + "\n"
+                + "  - Pegaram e se Recuperaram: " + recuperadosNaoVacinados + "\n"
+                + "  - Óbitos: " + mortosNaoVacinados;
+
+        // Exibe no console do Eclipse para registro
+        System.out.println(relatorio);
+        
+        // Abre o Pop-up na tela do jogo
+        JOptionPane.showMessageDialog(this, relatorio, "Fim da Simulação - INFECTADOS", JOptionPane.INFORMATION_MESSAGE);
     }
 
     @Override

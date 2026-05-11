@@ -12,7 +12,7 @@ public class Main {
         // 2. Avisa o Windows para maximizar o programa cobrindo toda a tela
         janela.setExtendedState(JFrame.MAXIMIZED_BOTH);
         
-        Arena arena = new Arena();
+        Arena arena = new Arena(130,130,130);
         janela.add(arena);
         
         janela.setVisible(true);
