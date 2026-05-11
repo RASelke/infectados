@@ -28,7 +28,7 @@ public abstract class Entidade {
         double limiteMinX = margem + tamanho;
         double limiteMaxX = larguraTela - margem - tamanho;
         double limiteMinY = margem + tamanho;
-        double limiteMaxY = alturaTela - margem - tamanho - 40;
+        double limiteMaxY = alturaTela - margem - tamanho;
         
         // 3. Lógica de quicar no eixo X
         if (posicao.getX() >= limiteMaxX){
@@ -94,7 +94,7 @@ public abstract class Entidade {
         return this.getPosicao().distanciaPara(outra.getPosicao()) <= (this.tamanho + outra.tamanho);
     }
 
-    public abstract void atualizar();
+    public abstract void atualizar(int larguraTela, int alturaTela);
 
 	public Vetor2D getPosicao() {
 		return posicao;

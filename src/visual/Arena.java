@@ -11,19 +11,30 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.util.ArrayList;
 import java.util.List;
+import java.awt.Toolkit;
+import java.awt.Dimension;
 
 public class Arena extends JPanel {
     private List<Pessoa> populacao;
     private boolean simulacaoRodando;
     private Timer timer;
+    
+    // Pega o tamanho do monitor
+    public static final Dimension TELA = Toolkit.getDefaultToolkit().getScreenSize();
+    public static final int LARGURA = (int) TELA.getWidth();
+    public static final int ALTURA = (int) TELA.getHeight();
+    
+    // Velocidade do jogo
+    public static final int FPS = 60;
 
     public Arena() {
         populacao = new ArrayList<>();
         simulacaoRodando = true;
         
-        popularArena(30, 30, 30);
-
-        timer = new Timer(16, e -> {
+        popularArena(30, 500, 30);
+        
+        int delay = 1000 / FPS;
+        timer = new Timer(delay, e -> {
             if (simulacaoRodando) {
                 atualizarFrame();
                 repaint();
@@ -35,21 +46,21 @@ public class Arena extends JPanel {
     public void popularArena(int qtdVacinados, int qtdNaoVacinados, int qtdInfectados) {
         // Criando os infectados
         for (int i = 0; i < qtdInfectados; i++) {
-            Vetor2D posInicial = new Vetor2D(400, 300); // Nasce no meio da tela
+            Vetor2D posInicial = new Vetor2D(LARGURA / 2.0, ALTURA / 2.0); // Nasce no meio da tela
             Vetor2D velInicial = new Vetor2D(Math.random() * 4 - 2, Math.random() * 4 - 2); // Velocidade aleatória
             populacao.add(new Pessoa(10, posInicial, velInicial, true, EstadoSaude.INFECTADO));
         }
 
         // Criando os saudáveis vacinados
         for (int i = 0; i < qtdVacinados; i++) {
-            Vetor2D posInicial = new Vetor2D(Math.random() * 700, Math.random() * 500);
+            Vetor2D posInicial = new Vetor2D(Math.random() * (LARGURA-40)+20, Math.random() * (LARGURA-40)+20);
             Vetor2D velInicial = new Vetor2D(Math.random() * 4 - 2, Math.random() * 4 - 2);
             populacao.add(new Pessoa(10, posInicial, velInicial, true, EstadoSaude.SUSCETIVEL));
         }
         
         // Criando os saudáveis NÃO vacinados
         for (int i = 0; i < qtdNaoVacinados; i++) {
-            Vetor2D posInicial = new Vetor2D(Math.random() * 700, Math.random() * 500);
+            Vetor2D posInicial = new Vetor2D(Math.random() * (LARGURA-40)+20, Math.random() * (LARGURA-40)+20);
             Vetor2D velInicial = new Vetor2D(Math.random() * 4 - 2, Math.random() * 4 - 2);
             populacao.add(new Pessoa(10, posInicial, velInicial, false, EstadoSaude.SUSCETIVEL));
         }
@@ -58,7 +69,7 @@ public class Arena extends JPanel {
     public void atualizarFrame() {
         // 1. Atualizar a vida e mover todo mundo
         for (Pessoa p : populacao) {
-            p.atualizar();
+            p.atualizar(LARGURA, ALTURA);
         }
 
         // 2. Verificar colisões de todos contra todos
@@ -110,7 +121,7 @@ public class Arena extends JPanel {
         g.setColor(Color.BLACK); // Cor da nossa borda
         
         // Desenha um retângulo vazio (x, y, largura, altura)
-        g.drawRect(margem, margem, 1200 - (margem * 2), 800 - (margem * 2) - 40);
+        g.drawRect(margem, margem, LARGURA - (margem * 2), ALTURA - (margem * 2));
         // --- FIM DA BORDA VISUAL
 
         // Desenhar cada pessoa

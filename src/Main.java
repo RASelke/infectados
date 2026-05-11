@@ -3,20 +3,18 @@ import visual.Arena;
 
 public class Main {
     public static void main(String[] args) {
-        JFrame janela = new JFrame("INFECTADOS");
-        
+        JFrame janela = new JFrame("Simulador de Infecção - Modelo SIR");
         janela.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
-        janela.setSize(800, 600);
+        // 1. Remove a barra de título (o "X" de fechar, minimizar, etc)
+        janela.setUndecorated(true);
         
-        janela.setResizable(false);
+        // 2. Avisa o Windows para maximizar o programa cobrindo toda a tela
+        janela.setExtendedState(JFrame.MAXIMIZED_BOTH);
         
-        janela.setLocationRelativeTo(null); 
-
         Arena arena = new Arena();
-        
         janela.add(arena);
-
+        
         janela.setVisible(true);
     }
 }

@@ -15,9 +15,9 @@ public class Pessoa extends Entidade {
     }
 
     @Override
-    public void atualizar() {
+    public void atualizar(int larguraTela, int alturaTela) {
         if (this.estado != EstadoSaude.MORTO) {
-            mover(800, 600);
+            mover(larguraTela, alturaTela);
             atualizarSaude();
         }
     }
