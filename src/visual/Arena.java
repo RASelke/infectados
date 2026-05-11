@@ -105,13 +105,13 @@ public class Arena extends JPanel {
         g.setColor(Color.WHITE);
         g.fillRect(0, 0, getWidth(), getHeight());
         
-        // --- COMEÇO DA NOVA BORDA VISUAL ---
+        // --- COMEÇO DA BORDA VISUAL
         int margem = 20; // A mesma margem que usamos na Entidade
         g.setColor(Color.BLACK); // Cor da nossa borda
         
-        // Desenha um retângulo vazio que representa a área útil (x, y, largura, altura)
-        g.drawRect(margem, margem, 800 - (margem * 2), 600 - (margem * 2) - 40);
-        // --- FIM DA NOVA BORDA VISUAL ---
+        // Desenha um retângulo vazio (x, y, largura, altura)
+        g.drawRect(margem, margem, 1200 - (margem * 2), 800 - (margem * 2) - 40);
+        // --- FIM DA BORDA VISUAL
 
         // Desenhar cada pessoa
         for (Pessoa p : populacao) {

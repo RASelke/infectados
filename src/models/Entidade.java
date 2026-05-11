@@ -20,13 +20,11 @@ public abstract class Entidade {
         posicao.setX(novaX);
         posicao.setY(novaY);
         
-        // 1. Definimos o tamanho da margem (espaço entre a bolinha e o final da tela)
         int margem = 20;
         
         // 2. Calculamos os limites reais. 
         // O limite mínimo é a margem + o raio da bolinha.
         // O limite máximo é a tela - a margem - o raio da bolinha.
-        // Tiramos 40 pixels a mais do Y máximo porque a barra superior da janela rouba espaço!
         double limiteMinX = margem + tamanho;
         double limiteMaxX = larguraTela - margem - tamanho;
         double limiteMinY = margem + tamanho;
@@ -51,14 +49,14 @@ public abstract class Entidade {
         }
     }
 
- // Método novo para calcular o "quique" realista entre duas entidades
+ // Método para calcular o "quique" entre duas entidades
     public void resolverColisaoFisica(Entidade outra) {
         // 1. Distância matemática entre os centros
         double dx = outra.posicao.getX() - this.posicao.getX();
         double dy = outra.posicao.getY() - this.posicao.getY();
         double distancia = Math.sqrt(dx * dx + dy * dy);
 
-        // Evita divisão por zero (caso nasçam exatamente no mesmo pixel)
+        // Evita divisão por zero
         if (distancia == 0) return;
 
         // 2. Descobrir a direção exata da batida (Vetor Normal)
