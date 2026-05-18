@@ -1,5 +1,10 @@
 package visual;
 
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.Font;
+import java.awt.AlphaComposite;
+
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
@@ -165,37 +170,101 @@ public class Arena extends JPanel {
         // Abre o Pop-up na tela do jogo
         JOptionPane.showMessageDialog(this, relatorio, "Fim da Simulação - INFECTADOS", JOptionPane.INFORMATION_MESSAGE);
     }
+    
+    private void desenharLegenda(Graphics2D g2d) {
+        int x = 40; // Posição X da legenda
+        int y = 40; // Posição Y da legenda
+        int larguraHUD = 230;
+        int alturaHUD = 150;
+
+        // 1. Fundo semi-transparente da legenda
+        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.8f));
+        g2d.setColor(Color.DARK_GRAY);
+        g2d.fillRoundRect(x, y, larguraHUD, alturaHUD, 15, 15);
+        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f)); // Volta a opacidade normal
+
+        // 2. Borda da legenda
+        g2d.setColor(Color.WHITE);
+        g2d.drawRoundRect(x, y, larguraHUD, alturaHUD, 15, 15);
+
+        // 3. Título
+        g2d.setFont(new Font("Arial", Font.BOLD, 16));
+        g2d.drawString("LEGENDA", x + 75, y + 25);
+
+        // 4. Itens da legenda (Bolinha + Texto)
+        g2d.setFont(new Font("Arial", Font.PLAIN, 14));
+        
+        // Suscetível Não Vacinado
+        g2d.setColor(Color.BLUE);
+        g2d.fillOval(x + 15, y + 40, 12, 12);
+        g2d.setColor(Color.WHITE);
+        g2d.drawString("Suscetível (Não vacinado)", x + 35, y + 51);
+        
+        // Suscetível Vacinado
+        g2d.setColor(Color.CYAN);
+        g2d.fillOval(x + 15, y + 65, 12, 12);
+        g2d.setColor(Color.WHITE);
+        g2d.drawString("Suscetível (Vacinado)", x + 35, y + 76);
+        
+        // Infectado
+        g2d.setColor(Color.RED);
+        g2d.fillOval(x + 15, y + 90, 12, 12);
+        g2d.setColor(Color.WHITE);
+        g2d.drawString("Infectado (Transmissor)", x + 35, y + 101);
+
+        // Recuperado
+        g2d.setColor(Color.GRAY);
+        g2d.fillOval(x + 15, y + 115, 12, 12);
+        g2d.setColor(Color.WHITE);
+        g2d.drawString("Recuperado (Imune)", x + 35, y + 126);
+    }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         
+        Graphics2D g2d = (Graphics2D) g;
+        
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        
         // Fundo da arena
-        g.setColor(Color.WHITE);
-        g.fillRect(0, 0, getWidth(), getHeight());
+        g2d.setColor(new Color(245, 245, 245));
+        g2d.fillRect(0, 0, getWidth(), getHeight());
         
-        // --- COMEÇO DA BORDA VISUAL
-        int margem = 20; // A mesma margem que usamos na Entidade
-        g.setColor(Color.BLACK); // Cor da nossa borda
-        
-        // Desenha um retângulo vazio (x, y, largura, altura)
-        g.drawRect(margem, margem, LARGURA - (margem * 2), ALTURA - (margem * 2));
-        // --- FIM DA BORDA VISUAL
+        // Borda
+        int margem = 20; 
+        g2d.setColor(Color.LIGHT_GRAY); // Gaiola mais sutil
+        g2d.drawRect(margem, margem, LARGURA - (margem * 2), ALTURA - (margem * 2));
 
         // Desenhar cada pessoa
         for (Pessoa p : populacao) {
             if (p.getEstado() == EstadoSaude.MORTO) continue;
+            
+            Color corPreenchimento = Color.BLACK;
+            Color corBorda = Color.BLACK;
 
             if (p.isVacinado() && p.getEstado() == EstadoSaude.SUSCETIVEL){
-                g.setColor(Color.CYAN);
+            	corPreenchimento = new Color(0, 255, 225); // Ciano
+                corBorda = new Color(0, 139, 139); // Ciano Escuro
+                
             } else {
-                g.setColor(Color.BLUE);
+            	corPreenchimento = new Color(0, 0, 225); // Azul
+                corBorda = new Color(17, 17, 132); // Azul Escuro
             }
 
             // Escolhe a cor baseada no estado de saúde
             switch (p.getEstado()) {
-                case INFECTADO: g.setColor(Color.RED); break;
-                case RECUPERADO: g.setColor(Color.GRAY); break;
+                case INFECTADO: {
+                	corPreenchimento = new Color(255, 0, 0); // Vermelho
+                    corBorda = new Color(128, 0, 0); // Bordô
+                    break;
+                }
+                case RECUPERADO: {
+                	corPreenchimento = new Color(128, 128, 128); // Cinza
+                    corBorda = new Color(169, 169, 169); // Cinza Escuro
+                    break;
+                }
                 default:
                     break;
             }
@@ -203,9 +272,21 @@ public class Arena extends JPanel {
             int raio = 10; // O tamanho da entidade
             int x = (int) p.getPosicao().getX();
             int y = (int) p.getPosicao().getY();
+            int diametro = raio * 2;
             
-            // Desenha a bolinha centralizada
-            g.fillOval(x - raio, y - raio, raio * 2, raio * 2);
+            // Desenha a bolinha
+            g2d.setColor(corPreenchimento);
+            g2d.fillOval(x, y, diametro, diametro);
+            
+            // Desenha a borda da bolinha para dar profundidade
+            g2d.setColor(corBorda);
+            g2d.drawOval(x, y, diametro, diametro);
+        }
+
+        // Desenha a HUD por cima de tudo
+        desenharLegenda(g2d);
+        
+        // A sincronização pro Linux continuar liso!
+        Toolkit.getDefaultToolkit().sync();
         }
     }
-}

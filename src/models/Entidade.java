@@ -29,7 +29,7 @@ public abstract class Entidade {
         double limiteMaxX = larguraTela - margem - tamanho;
         double limiteMinY = margem + tamanho;
         double limiteMaxY = alturaTela - margem - tamanho;
-        
+     
         // 3. Lógica de quicar no eixo X
         if (posicao.getX() >= limiteMaxX){
             posicao.setX(limiteMaxX); // Força a bolinha para dentro caso ela tente vazar

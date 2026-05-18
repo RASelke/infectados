@@ -1,18 +1,21 @@
 import javax.swing.JFrame;
 import visual.Arena;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 
 public class Main {
     public static void main(String[] args) {
         JFrame janela = new JFrame("Simulador de Infecção - Modelo SIR");
         janela.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
-        // 1. Remove a barra de título (o "X" de fechar, minimizar, etc)
-        janela.setUndecorated(true);
+        // 1. Remove a barra de título da janela
         
-        // 2. Avisa o Windows para maximizar o programa cobrindo toda a tela
-        janela.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        // 2. Captura o monitor principal do seu sistema
+        GraphicsDevice monitor = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
         
-        Arena arena = new Arena(130,130,130);
+        monitor.setFullScreenWindow(janela);
+        
+        Arena arena = new Arena(50,50,30);
         janela.add(arena);
         
         janela.setVisible(true);
