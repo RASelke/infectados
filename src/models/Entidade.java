@@ -20,15 +20,15 @@ public abstract class Entidade {
         posicao.setX(novaX);
         posicao.setY(novaY);
         
-        int margem = 20;
+        int margem = 120;
         
         // 2. Calculamos os limites reais. 
         // O limite mínimo é a margem + o raio da bolinha.
         // O limite máximo é a tela - a margem - o raio da bolinha.
-        double limiteMinX = margem;
-        double limiteMaxX = larguraTela - margem - 2*tamanho;
-        double limiteMinY = margem;
-        double limiteMaxY = alturaTela - margem - 2*tamanho;
+        double limiteMinX = margem + tamanho;
+        double limiteMaxX = larguraTela - margem - tamanho;
+        double limiteMinY = margem + tamanho;
+        double limiteMaxY = alturaTela - margem - tamanho;
      
         // 3. Lógica de quicar no eixo X
         if (posicao.getX() >= limiteMaxX){
