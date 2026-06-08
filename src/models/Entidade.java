@@ -25,10 +25,10 @@ public abstract class Entidade {
         // 2. Calculamos os limites reais. 
         // O limite mínimo é a margem + o raio da bolinha.
         // O limite máximo é a tela - a margem - o raio da bolinha.
-        double limiteMinX = margem + tamanho;
-        double limiteMaxX = larguraTela - margem - tamanho;
-        double limiteMinY = margem + tamanho;
-        double limiteMaxY = alturaTela - margem - tamanho;
+        double limiteMinX = margem;
+        double limiteMaxX = larguraTela - margem - 2*tamanho;
+        double limiteMinY = margem;
+        double limiteMaxY = alturaTela - margem - 2*tamanho;
      
         // 3. Lógica de quicar no eixo X
         if (posicao.getX() >= limiteMaxX){
@@ -45,7 +45,7 @@ public abstract class Entidade {
             movimento.setY(movimento.getY() * -1);
         } else if (posicao.getY() <= limiteMinY){
             posicao.setY(limiteMinY);
-            movimento.setY(movimento.getY() * -1);
+            movimento.setY(movimento.getY() * -1);	
         }
     }
 
