@@ -6,12 +6,14 @@ public class Pessoa extends Entidade {
     private boolean vacinado;
     private EstadoSaude estado;
     private int tempoInfectado;
+    private boolean pacienteZero;
 
-    public Pessoa(int tamanho, Vetor2D posicao, Vetor2D movimento, boolean vacinado, EstadoSaude estado) {
+    public Pessoa(int tamanho, Vetor2D posicao, Vetor2D movimento, boolean vacinado, EstadoSaude estado, boolean pacienteZero) {
         super(tamanho, posicao, movimento);
         this.vacinado = vacinado;
         this.estado = estado;
         this.tempoInfectado = 0;
+        this.pacienteZero = pacienteZero;
     }
 
     @Override
@@ -25,7 +27,11 @@ public class Pessoa extends Entidade {
     public void atualizarSaude() {
         if (estado == EstadoSaude.INFECTADO){
             tempoInfectado++;
+            
             double chanceMorrer = vacinado ? 0.001 : 0.005;
+            if (pacienteZero) {
+                chanceMorrer = 0.0001; 
+            }
             
             if (Math.random() < chanceMorrer){
                 estado = EstadoSaude.MORTO;
@@ -54,5 +60,9 @@ public class Pessoa extends Entidade {
 
     public boolean isVacinado() {
         return vacinado;
+    }
+    
+    public boolean isPacienteZero() {
+    	return pacienteZero;
     }
 }
