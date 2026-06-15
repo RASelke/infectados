@@ -20,7 +20,7 @@ public abstract class Entidade {
         posicao.setX(novaX);
         posicao.setY(novaY);
         
-        int margem = 120;
+        int margem = 0; // Margem do quique das entidades
         
         // 2. Calculamos os limites reais. 
         // O limite mínimo é a margem + o raio da bolinha.

@@ -157,6 +157,8 @@ public class Arena extends JPanel {
         
         r.totalMortos = r.mortosVac + r.mortosNaoVac;
         historicoResultados.add(r);
+        
+        imprimirRodadaNoTerminal(r, rodadaAtual);
     }
     
     private void prepararResultadoIntermediario() {
@@ -264,6 +266,24 @@ public class Arena extends JPanel {
         g2d.drawString("Recuperado (Imune)", x + 35, y + 146);
     }
 
+    private void imprimirRodadaNoTerminal(ResultadoRodada r, int numeroRodada) {
+        String textoTerminal = "\n=================================================\n"
+                + "  RESULTADOS DA RODADA " + numeroRodada + "\n"
+                + "=================================================\n"
+                + "VACINADOS:\n"
+                + "  - Ilesos: " + r.ilesosVac + "\n"
+                + "  - Recuperados: " + r.recVac + "\n"
+                + "  - Óbitos: " + r.mortosVac + "\n\n"
+                + "NÃO VACINADOS (Excluindo Paciente Zero):\n"
+                + "  - Ilesos: " + r.ilesosNaoVac + "\n"
+                + "  - Recuperados: " + r.recNaoVac + "\n"
+                + "  - Óbitos: " + r.mortosNaoVac + "\n\n"
+                + "TOTAL DE ÓBITOS NESTA RODADA: " + r.totalMortos + "\n"
+                + "=================================================\n";
+        
+        System.out.println(textoTerminal);
+    }
+    
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -275,7 +295,7 @@ public class Arena extends JPanel {
         g2d.setColor(new Color(245, 245, 245));
         g2d.fillRect(0, 0, getWidth(), getHeight());
         
-        int margem = 120; 
+        int margem = 0; // Margem visual
         g2d.setColor(Color.LIGHT_GRAY); 
         g2d.drawRect(margem, margem, LARGURA - (margem * 2), ALTURA - (margem * 2));
 

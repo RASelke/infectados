@@ -25,21 +25,24 @@ public class Pessoa extends Entidade {
     }
 
     public void atualizarSaude() {
+    	int limiteInfeccao = 1000; //Tempo (em ticks) máximo que uma Pessoa pode ficar infectada sem se recuperar, aṕos isso, recupera sozinha.
+    	
         if (estado == EstadoSaude.INFECTADO){
             tempoInfectado++;
             
-            double chanceMorrer = vacinado ? 0.001 : 0.005;
+            double chanceMorrer = vacinado ? (200 / limiteInfeccao) : (500 / limiteInfeccao);
             if (pacienteZero) {
                 chanceMorrer = 0.0001; 
             }
             
+            // Aqui acontece a morte
             if (Math.random() < chanceMorrer){
                 estado = EstadoSaude.MORTO;
                 movimento.setX(0);
                 movimento.setY(0);
             }
             
-            if (tempoInfectado > 700 && estado != EstadoSaude.MORTO) {
+            if (tempoInfectado > limiteInfeccao && estado != EstadoSaude.MORTO) {
                 estado = EstadoSaude.RECUPERADO;
             }
         }
@@ -47,7 +50,7 @@ public class Pessoa extends Entidade {
 
     public void interagir(Pessoa outra) {
         if (this.estado == EstadoSaude.INFECTADO && outra.estado == EstadoSaude.SUSCETIVEL){
-            double chanceInfeccao = outra.vacinado ? 0.2 : 0.8;
+            double chanceInfeccao = outra.vacinado ? 0.2 : 0.5;
             if (Math.random() < chanceInfeccao) {
                 outra.estado = EstadoSaude.INFECTADO;
             }
