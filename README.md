@@ -1,2 +1,2 @@
-# infectados
+# INFECTADOS
 Simulador de Infecção
