@@ -16,6 +16,11 @@ import java.util.List;
 import java.awt.Toolkit;
 import java.awt.Dimension;
 
+import java.util.Queue;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import models.ConfigTeste;
+
 public class Arena extends JPanel {
     private List<Pessoa> populacao;
     private boolean simulacaoRodando;
@@ -38,6 +43,10 @@ public class Arena extends JPanel {
     private int margem;
     private int tamanhoPessoa;
     private double velMax;
+    
+    // Controle de Fila
+    private Queue<ConfigTeste> filaTestes;
+    private ConfigTeste testeAtual;
 
     private class ResultadoRodada {
         int mortosVac = 0, recVac = 0, ilesosVac = 0;
@@ -45,32 +54,57 @@ public class Arena extends JPanel {
         int totalMortos = 0; 
     }
 
-    // 1. CONSTRUTOR GIGANTE E CONFIGURÁVEL
-    public Arena(int inicialVacinados, int inicialNaoVacinados, int inicialInfectados, 
-                 int totalRodadas, int fps, int margem, int tamanhoPessoa, double velMax) {
-        
-        this.inicialVacinados = inicialVacinados;
-        this.inicialNaoVacinados = inicialNaoVacinados;
-        this.inicialInfectados = inicialInfectados;
-        this.totalRodadas = totalRodadas;
-        this.margem = margem;
-        this.tamanhoPessoa = tamanhoPessoa;
-        this.velMax = velMax;
-
+    public Arena(Queue<ConfigTeste> filaTestes) {
+        this.filaTestes = filaTestes;
         populacao = new ArrayList<>();
         historicoResultados = new ArrayList<>();
         simulacaoRodando = true;
-        
-        popularArena(this.inicialVacinados, this.inicialNaoVacinados, this.inicialInfectados);
-        
-        int delay = 1000 / fps; // O FPS ajusta o atraso do Timer
-        timer = new Timer(delay, e -> {
+
+        // Inicia puxando o primeiro teste da fila
+        carregarProximoTeste();
+
+        timer = new Timer(1000 / 60 , e -> {
             if (simulacaoRodando) {
                 atualizarFrame();
                 repaint();
             }
         });
         timer.start();
+    }
+
+    private void carregarProximoTeste() {
+        if (filaTestes.isEmpty()) {
+            // Se a fila acabou, paramos tudo e mostramos a tela de Dashboard final!
+            simulacaoRodando = false;
+            if(timer != null) timer.stop();
+            mostrarTelaFinal = true;
+            repaint();
+            return;
+        }
+
+        // Puxa e remove o próximo teste da fila
+        testeAtual = filaTestes.poll();
+
+        // Configura a Arena com as regras do arquivo para ESTE teste
+        this.inicialVacinados = testeAtual.vacinados;
+        this.inicialNaoVacinados = testeAtual.naoVacinados;
+        this.inicialInfectados = testeAtual.infectados;
+        this.totalRodadas = testeAtual.rodadas;
+        this.margem = testeAtual.margem;
+        this.tamanhoPessoa = testeAtual.tamanhoPessoa;
+        this.velMax = testeAtual.velMax;
+
+        // Reinicia o estado para o novo teste
+        this.rodadaAtual = 1;
+        this.historicoResultados.clear();
+        this.populacao.clear();
+
+        // Ajusta o FPS do Timer dinamicamente
+        if (timer != null) {
+            timer.setDelay(1000 / testeAtual.fps);
+        }
+
+        popularArena(inicialVacinados, inicialNaoVacinados, inicialInfectados);
     }
     
     public void popularArena(int qtdVacinados, int qtdNaoVacinados, int qtdInfectados) {
@@ -122,18 +156,37 @@ public class Arena extends JPanel {
             salvarEstatisticasDaRodada();
             
             if (rodadaAtual < totalRodadas) {
-                // Reinicia a arena para a próxima rodada
                 rodadaAtual++;
-                populacao.clear(); // Limpa as entidades antigas
+                populacao.clear(); 
                 popularArena(inicialVacinados, inicialNaoVacinados, inicialInfectados);
             } else {
-                // Se acabou, calcula a mediana e mostra o painel final
+                // ACABARAM AS RODADAS DESTE TESTE!
                 prepararResultadoIntermediario();
-                simulacaoRodando = false;
-                timer.stop();
-                mostrarTelaFinal = true;
-                repaint();
+                exportarParaCSV(); // Salva a mediana no arquivo!
+                
+                // Em vez de parar, chama o próximo teste da fila!
+                carregarProximoTeste(); 
             }
+        }
+    }
+    
+    private void exportarParaCSV() {
+        try (PrintWriter writer = new PrintWriter(new FileWriter("resultados_saida.csv", true))) {
+            writer.printf("%d;%d;%d;%d;%d;%d;%d;%d;%d;%d\n",
+                testeAtual.id,
+                inicialVacinados,
+                inicialNaoVacinados,
+                inicialInfectados,
+                resultadoMediano.ilesosVac,
+                resultadoMediano.recVac,
+                resultadoMediano.mortosVac,
+                resultadoMediano.ilesosNaoVac,
+                resultadoMediano.recNaoVac,
+                resultadoMediano.mortosNaoVac
+            );
+            System.out.println("Teste ID " + testeAtual.id + " processado e salvo.");
+        } catch (Exception e) {
+            System.out.println("Erro ao exportar o teste.");
         }
     }
 
@@ -175,6 +228,13 @@ public class Arena extends JPanel {
     }
 
     private void desenharTelaFinal(Graphics2D g2d) {
+    	if (resultadoMediano == null) {
+            g2d.setColor(Color.RED);
+            g2d.setFont(new Font("Arial", Font.BOLD, 24));
+            g2d.drawString("Erro: Nenhum dado estatístico para exibir.", LARGURA / 2 - 200, ALTURA / 2);
+            return; // O comando return expulsa o Java desse método para ele não ler o código abaixo
+        }
+    	
         // Fundo Translúcido
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.7f));
         g2d.setColor(Color.BLACK);
