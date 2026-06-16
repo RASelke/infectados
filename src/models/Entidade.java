@@ -1,28 +1,27 @@
 package models;
 
 import fisica.Vetor2D;
+import visual.Arena;
 
 public abstract class Entidade {
     private int tamanho;
     protected Vetor2D posicao;
 	protected Vetor2D movimento;
-
+	protected int margem;
+	
     public Entidade(int tamanho, Vetor2D posicao, Vetor2D movimento) {
         this.tamanho = tamanho;
         this.setPosicao(posicao);
         this.movimento = movimento;
     }
 
-    public void mover(int larguraTela, int alturaTela) {
+    public void mover(int larguraTela, int alturaTela, int margem) {
         double novaX = posicao.getX() + movimento.getX();
         double novaY = posicao.getY() + movimento.getY();
         
         posicao.setX(novaX);
         posicao.setY(novaY);
         
-        int margem = 0; // Margem do quique das entidades
-        
-        // 2. Calculamos os limites reais. 
         // O limite mínimo é a margem + o raio da bolinha.
         // O limite máximo é a tela - a margem - o raio da bolinha.
         double limiteMinX = margem + tamanho;
@@ -30,22 +29,20 @@ public abstract class Entidade {
         double limiteMinY = margem + tamanho;
         double limiteMaxY = alturaTela - margem - tamanho;
      
-        // 3. Lógica de quicar no eixo X
         if (posicao.getX() >= limiteMaxX){
-            posicao.setX(limiteMaxX); // Força a bolinha para dentro caso ela tente vazar
-            movimento.setX(movimento.getX() * -1); // Inverte a direção
+            posicao.setX(limiteMaxX);
+            movimento.setX(-Math.abs(movimento.getX())); 
         } else if (posicao.getX() <= limiteMinX){
             posicao.setX(limiteMinX);
-            movimento.setX(movimento.getX() * -1);
+            movimento.setX(Math.abs(movimento.getX()));  
         }
         
-        // 4. Lógica de quicar no eixo Y
         if (posicao.getY() >= limiteMaxY){
             posicao.setY(limiteMaxY);
-            movimento.setY(movimento.getY() * -1);
+            movimento.setY(-Math.abs(movimento.getY())); 
         } else if (posicao.getY() <= limiteMinY){
             posicao.setY(limiteMinY);
-            movimento.setY(movimento.getY() * -1);	
+            movimento.setY(Math.abs(movimento.getY()));  
         }
     }
 
@@ -94,7 +91,7 @@ public abstract class Entidade {
         return this.getPosicao().distanciaPara(outra.getPosicao()) <= (this.tamanho + outra.tamanho);
     }
 
-    public abstract void atualizar(int larguraTela, int alturaTela);
+    public abstract void atualizar(int larguraTela, int alturaTela, int margem);
 
 	public Vetor2D getPosicao() {
 		return posicao;

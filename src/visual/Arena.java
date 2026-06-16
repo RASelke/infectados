@@ -20,43 +20,50 @@ public class Arena extends JPanel {
     private List<Pessoa> populacao;
     private boolean simulacaoRodando;
     private Timer timer;
-    
-    private int inicialVacinados;
-    private int inicialNaoVacinados;
-    private int inicialInfectados;
-    
-    // CONTROLE DE RODADAS
-    private int rodadaAtual = 1;
-    private final int TOTAL_RODADAS = 3;
     private List<ResultadoRodada> historicoResultados;
-    private ResultadoRodada resultadoMediano; // O cenário intermediário que irá para o painel final
-    private boolean mostrarTelaFinal = false; // Controla o Dashboard
+    private ResultadoRodada resultadoMediano; 
+    private boolean mostrarTelaFinal = false; 
     
-    // Constantes de Ecrã
+    // As Telas ainda precisam ser constantes para o sistema operacional
     public static final Dimension TELA = Toolkit.getDefaultToolkit().getScreenSize();
     public static final int LARGURA = (int) TELA.getWidth();
     public static final int ALTURA = (int) TELA.getHeight();
-    public static final int FPS = 60;
 
-    // CLASSE INTERNA PARA GUARDAR OS DADOS DE CADA RODADA
+    // --- VARIÁVEIS DE CONFIGURAÇÃO (PARAMETRIZADAS) ---
+    private int inicialVacinados;
+    private int inicialNaoVacinados;
+    private int inicialInfectados;
+    private int totalRodadas;
+    private int rodadaAtual = 1;
+    private int margem;
+    private int tamanhoPessoa;
+    private double velMax;
+
     private class ResultadoRodada {
         int mortosVac = 0, recVac = 0, ilesosVac = 0;
-        int mortosNaoVac = 0, recNaoVac = 0, ilesosNaoVac = 0;
-        int totalMortos = 0; // Usado para definir qual é a mediana
+        int mortosNaoVac = 0, recNaoVac = 0, ilesosNaoVac = 0;	
+        int totalMortos = 0; 
     }
 
-    public Arena(int inicialVacinados, int inicialNaoVacinados, int inicialInfectados) {
+    // 1. CONSTRUTOR GIGANTE E CONFIGURÁVEL
+    public Arena(int inicialVacinados, int inicialNaoVacinados, int inicialInfectados, 
+                 int totalRodadas, int fps, int margem, int tamanhoPessoa, double velMax) {
+        
         this.inicialVacinados = inicialVacinados;
         this.inicialNaoVacinados = inicialNaoVacinados;
         this.inicialInfectados = inicialInfectados;
-        
+        this.totalRodadas = totalRodadas;
+        this.margem = margem;
+        this.tamanhoPessoa = tamanhoPessoa;
+        this.velMax = velMax;
+
         populacao = new ArrayList<>();
         historicoResultados = new ArrayList<>();
         simulacaoRodando = true;
         
         popularArena(this.inicialVacinados, this.inicialNaoVacinados, this.inicialInfectados);
         
-        int delay = 1000 / FPS;
+        int delay = 1000 / fps; // O FPS ajusta o atraso do Timer
         timer = new Timer(delay, e -> {
             if (simulacaoRodando) {
                 atualizarFrame();
@@ -65,33 +72,32 @@ public class Arena extends JPanel {
         });
         timer.start();
     }
-
+    
     public void popularArena(int qtdVacinados, int qtdNaoVacinados, int qtdInfectados) {
-        // 1. Paciente Zero (Infectado = true, Vacinado = false, Identidade = true)
         for (int i = 0; i < qtdInfectados; i++) {
             Vetor2D posInicial = new Vetor2D(LARGURA / 2.0, ALTURA / 2.0); 
-            Vetor2D velInicial = new Vetor2D(Math.random() * 4 - 2, Math.random() * 4 - 2); 
-            populacao.add(new Pessoa(10, posInicial, velInicial, false, EstadoSaude.INFECTADO, true));
+            // FÓRMULA CORRIGIDA: Math.random() * velMax * 2 - velMax
+            // Isso garante que ela pode ir perfeitamente para Cima, Baixo, Esquerda ou Direita de forma justa!
+            Vetor2D velInicial = new Vetor2D((Math.random() * velMax * 2) - velMax, (Math.random() * velMax * 2) - velMax); 
+            populacao.add(new Pessoa(tamanhoPessoa, posInicial, velInicial, false, EstadoSaude.INFECTADO, true));
         }
 
-        // 2. Vacinados Saudáveis (Identidade Paciente Zero = false)
         for (int i = 0; i < qtdVacinados; i++) {
             Vetor2D posInicial = new Vetor2D(Math.random() * (LARGURA-40)+20, Math.random() * (ALTURA-40)+20);
-            Vetor2D velInicial = new Vetor2D(Math.random() * 4 - 2, Math.random() * 4 - 2);
-            populacao.add(new Pessoa(10, posInicial, velInicial, true, EstadoSaude.SUSCETIVEL, false));
+            Vetor2D velInicial = new Vetor2D((Math.random() * velMax * 2) - velMax, (Math.random() * velMax * 2) - velMax);
+            populacao.add(new Pessoa(tamanhoPessoa, posInicial, velInicial, true, EstadoSaude.SUSCETIVEL, false));
         }
         
-        // 3. Não Vacinados Saudáveis (Identidade Paciente Zero = false)
         for (int i = 0; i < qtdNaoVacinados; i++) {
             Vetor2D posInicial = new Vetor2D(Math.random() * (LARGURA-40)+20, Math.random() * (ALTURA-40)+20);
-            Vetor2D velInicial = new Vetor2D(Math.random() * 4 - 2, Math.random() * 4 - 2);
-            populacao.add(new Pessoa(10, posInicial, velInicial, false, EstadoSaude.SUSCETIVEL, false));
+            Vetor2D velInicial = new Vetor2D((Math.random() * velMax * 2) - velMax, (Math.random() * velMax * 2) - velMax);
+            populacao.add(new Pessoa(tamanhoPessoa, posInicial, velInicial, false, EstadoSaude.SUSCETIVEL, false));
         }
     }
 
     public void atualizarFrame() {
         for (Pessoa p : populacao) {
-            p.atualizar(LARGURA, ALTURA);
+            p.atualizar(LARGURA, ALTURA, this.margem);
         }
 
         for (int i = 0; i < populacao.size(); i++) {
@@ -115,7 +121,7 @@ public class Arena extends JPanel {
         if (verificarFimDeJogo()) {
             salvarEstatisticasDaRodada();
             
-            if (rodadaAtual < TOTAL_RODADAS) {
+            if (rodadaAtual < totalRodadas) {
                 // Reinicia a arena para a próxima rodada
                 rodadaAtual++;
                 populacao.clear(); // Limpa as entidades antigas
@@ -162,10 +168,10 @@ public class Arena extends JPanel {
     }
     
     private void prepararResultadoIntermediario() {
-        // Ordena do cenário com menos mortos para o cenário com mais mortos
         historicoResultados.sort((r1, r2) -> Integer.compare(r1.totalMortos, r2.totalMortos));
-        // Apanha o caso intermediário (índice 1 de uma lista de tamanho 3)
-        resultadoMediano = historicoResultados.get(1); 
+        // A divisão inteira encontra o meio (mesmo se for apenas 1 rodada!)
+        int indiceMediano = historicoResultados.size() / 2;
+        resultadoMediano = historicoResultados.get(indiceMediano); 
     }
 
     private void desenharTelaFinal(Graphics2D g2d) {
@@ -237,7 +243,7 @@ public class Arena extends JPanel {
         // INFORMAÇÃO DA RODADA ATUAL
         g2d.setFont(new Font("Arial", Font.BOLD, 16));
         g2d.setColor(Color.YELLOW);
-        g2d.drawString("RODADA " + rodadaAtual + " DE " + TOTAL_RODADAS, x + 55, y + 25);
+        g2d.drawString("RODADA " + rodadaAtual + " DE " + totalRodadas, x + 55, y + 25);
 
         g2d.setColor(Color.WHITE);
         g2d.setFont(new Font("Arial", Font.BOLD, 14));
@@ -295,9 +301,8 @@ public class Arena extends JPanel {
         g2d.setColor(new Color(245, 245, 245));
         g2d.fillRect(0, 0, getWidth(), getHeight());
         
-        int margem = 0; // Margem visual
         g2d.setColor(Color.LIGHT_GRAY); 
-        g2d.drawRect(margem, margem, LARGURA - (margem * 2), ALTURA - (margem * 2));
+        g2d.drawRect(this.margem , this.margem, LARGURA - (this.margem * 2), ALTURA - (this.margem * 2));
 
         for (Pessoa p : populacao) {
             if (p.getEstado() == EstadoSaude.MORTO) continue;
@@ -327,7 +332,7 @@ public class Arena extends JPanel {
                 default: break;
             }
 
-            int raio = 10;
+            int raio = this.tamanhoPessoa;
             int x = (int) p.getPosicao().getX() - raio;
             int y = (int) p.getPosicao().getY() - raio;
             int diametro = raio * 2;

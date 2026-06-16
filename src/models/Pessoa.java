@@ -17,9 +17,9 @@ public class Pessoa extends Entidade {
     }
 
     @Override
-    public void atualizar(int larguraTela, int alturaTela) {
+    public void atualizar(int larguraTela, int alturaTela, int margem) {
         if (this.estado != EstadoSaude.MORTO) {
-            mover(larguraTela, alturaTela);
+            mover(larguraTela, alturaTela, margem);
             atualizarSaude();
         }
     }
@@ -30,9 +30,9 @@ public class Pessoa extends Entidade {
         if (estado == EstadoSaude.INFECTADO){
             tempoInfectado++;
             
-            double chanceMorrer = vacinado ? (200 / limiteInfeccao) : (500 / limiteInfeccao);
+            double chanceMorrer = vacinado ? 0.002 : 0.005;
             if (pacienteZero) {
-                chanceMorrer = 0.0001; 
+                chanceMorrer = 0.001; 
             }
             
             // Aqui acontece a morte
@@ -42,7 +42,7 @@ public class Pessoa extends Entidade {
                 movimento.setY(0);
             }
             
-            if (tempoInfectado > limiteInfeccao && estado != EstadoSaude.MORTO) {
+            if (tempoInfectado > 700 && estado != EstadoSaude.MORTO) {
                 estado = EstadoSaude.RECUPERADO;
             }
         }
