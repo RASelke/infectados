@@ -17,12 +17,14 @@ public class Main {
         // CHAVE SELETORA:
         // true  -> Desenha tudo, espera 5s, ideal para gravar o VÍDEO.
         // false -> Tela preta, ignora FPS, roda tudo na velocidade da luz.
-        boolean modoVisual = false; 
+        boolean modoVisual = true; 
         // =========================================================
 
         try (PrintWriter writer = new PrintWriter(new FileWriter("resultados_saida.csv", false))) {
-            writer.println("ID_Teste;Vacinados_Iniciais;Nao_Vacinados;Infectados;Vac_Ilesos;Vac_Recup;Vac_Mortos;NaoVac_Ilesos;NaoVac_Recup;NaoVac_Mortos");
-        } catch (Exception e) {}
+            writer.println("ID_Teste;Vacinados_Iniciais;Nao_Vacinados;Infectados;Vac_Ilesos;Vac_Recup;Vac_Mortos;NaoVac_Ilesos;NaoVac_Recup;NaoVac_Mortos;Minimo_Mortos;Media_Mortos;Maximo_Mortos");
+        } catch (Exception e) {
+            System.out.println("Erro ao criar arquivo de saída.");
+        }
 
         Queue<ConfigTeste> filaTestes = new LinkedList<>();
         try (BufferedReader br = new BufferedReader(new FileReader("testes.csv"))) {
