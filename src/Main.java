@@ -15,9 +15,9 @@ public class Main {
         
         // =========================================================
         // CHAVE SELETORA:
-        // true  -> Desenha tudo, espera 5s, ideal para gravar o VÍDEO.
+        // true  -> Desenha tudo.
         // false -> Tela preta, ignora FPS, roda tudo na velocidade da luz.
-        boolean modoVisual = true; 
+        boolean modoVisual = false; 
         // =========================================================
 
         try (PrintWriter writer = new PrintWriter(new FileWriter("resultados_saida.csv", false))) {

@@ -1,6 +1,7 @@
 # Files
 IDEIAS.md
 *.pdf
+resultados_saida.csv
 
 # Compiled class file
 *.class
