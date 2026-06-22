@@ -3,6 +3,7 @@ package visual;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.AlphaComposite;
 import javax.swing.JPanel;
 import javax.swing.Timer;
@@ -37,14 +38,16 @@ public class Arena extends JPanel {
     
     private Queue<ConfigTeste> filaTestes;
     private ConfigTeste testeAtual;
+    private int totalDeTestesNaBateria; // Usado para mostrar na tela de Intro
 
-    // --- MÁQUINA DE ESTADOS ATUALIZADA (COM TRANSIÇÃO) ---
-    private enum Fase { SIMULANDO, TRANSIÇÃO_RODADA, PAUSA_MEDIANA, FIM_GLOBAL }
-    private Fase faseAtual = Fase.SIMULANDO;
+    // --- MÁQUINA DE ESTADOS (AGORA COM TELA INICIAL) ---
+    private enum Fase { INTRO, SIMULANDO, TRANSIÇÃO_RODADA, PAUSA_MEDIANA, FIM_GLOBAL }
+    private Fase faseAtual;
     
     private int contadorPausa = 0; 
     private int contadorTransicao = 0;
     private int maxTransicao = 0;
+    private int contadorIntro = 0;
     
     private boolean modoVisual;
     private List<ResumoPlanilha> relatorioGlobal; 
@@ -70,6 +73,7 @@ public class Arena extends JPanel {
     public Arena(Queue<ConfigTeste> filaTestes, boolean modoVisual) {
         this.filaTestes = filaTestes;
         this.modoVisual = modoVisual; 
+        this.totalDeTestesNaBateria = filaTestes.size(); // Guarda quantos testes existem antes de esvaziar a fila
         
         populacao = new java.util.concurrent.CopyOnWriteArrayList<>(); 
         historicoResultados = new ArrayList<>();
@@ -78,11 +82,17 @@ public class Arena extends JPanel {
         carregarProximoTeste();
 
         if (this.modoVisual) {
+            // Inicia na tela de Intro (dura 4 segundos)
+            faseAtual = Fase.INTRO;
+            contadorIntro = (testeAtual != null ? testeAtual.fps : 60) * 4; 
+            
             timer = new Timer(1000 / 60, e -> {
                 atualizarFrame();
                 repaint();
             });
             timer.start();
+        } else {
+            faseAtual = Fase.SIMULANDO; // Modo rápido não tem tempo a perder com intros!
         }
     }
 
@@ -109,7 +119,11 @@ public class Arena extends JPanel {
             return;
         }
 
-        faseAtual = Fase.SIMULANDO;
+        if (modoVisual && relatorioGlobal.isEmpty()) {
+            faseAtual = Fase.INTRO; // Mantém na intro se for o mesmíssimo início do programa
+        } else {
+            faseAtual = Fase.SIMULANDO;
+        }
 
         this.inicialVacinados = testeAtual.vacinados;
         this.inicialNaoVacinados = testeAtual.naoVacinados;
@@ -151,6 +165,14 @@ public class Arena extends JPanel {
     }
 
     public void atualizarFrame() {
+        if (faseAtual == Fase.INTRO) {
+            contadorIntro--;
+            if (contadorIntro <= 0) {
+                faseAtual = Fase.SIMULANDO;
+            }
+            return;
+        }
+
         if (faseAtual == Fase.PAUSA_MEDIANA) {
             contadorPausa--;
             if (contadorPausa <= 0) {
@@ -159,18 +181,16 @@ public class Arena extends JPanel {
             return; 
         }
         
-        // NOVA FASE: A Animação de Transição
         if (faseAtual == Fase.TRANSIÇÃO_RODADA) {
             contadorTransicao--;
             int meioTempo = maxTransicao / 2;
             
-            // Exatamente na metade da animação (quando a tela está 100% escura), trocamos as bolinhas de lugar
             if (contadorTransicao == meioTempo) {
                 rodadaAtual++;
                 populacao.clear(); 
                 popularArena(inicialVacinados, inicialNaoVacinados, inicialInfectados);
             } else if (contadorTransicao <= 0) {
-                faseAtual = Fase.SIMULANDO; // A tela clareou, volta a rodar a simulação
+                faseAtual = Fase.SIMULANDO; 
             }
             return; 
         }
@@ -201,12 +221,11 @@ public class Arena extends JPanel {
             
             if (rodadaAtual < totalRodadas) {
                 if (modoVisual) {
-                    // Prepara a transição de Fade de 2 segundos (1s escurecendo, 1s clareando)
+                    // Transição FADE IN/OUT agora está CURTA E DINÂMICA (Apenas 1 segundo total)
                     faseAtual = Fase.TRANSIÇÃO_RODADA;
-                    maxTransicao = testeAtual.fps * 2; 
+                    maxTransicao = testeAtual.fps; 
                     contadorTransicao = maxTransicao;
                 } else {
-                    // Modo rápido ignora a animação
                     rodadaAtual++;
                     populacao.clear(); 
                     popularArena(inicialVacinados, inicialNaoVacinados, inicialInfectados);
@@ -217,7 +236,7 @@ public class Arena extends JPanel {
                 guardarNoRelatorioGlobal();
                 
                 if (modoVisual) {
-                    faseAtual = Fase.PAUSA_MEDIANA ;
+                    faseAtual = Fase.PAUSA_MEDIANA;
                     contadorPausa = testeAtual.fps * 5; 
                 } else {
                     carregarProximoTeste(); 
@@ -302,6 +321,47 @@ public class Arena extends JPanel {
     }
 
     // --- AS NOSSAS TELAS VISUAIS ---
+
+    private void desenharTelaIntro(Graphics2D g2d) {
+        g2d.setColor(new Color(25, 28, 36)); // Fundo dark limpo
+        g2d.fillRect(0, 0, LARGURA, ALTURA);
+
+        int centerX = LARGURA / 2;
+        int centerY = ALTURA / 2;
+
+        // Título Principal
+        g2d.setFont(new Font("Arial", Font.BOLD, 42));
+        g2d.setColor(new Color(0, 255, 150));
+        String titulo = "SIMULADOR DE INFECÇÃO (MODELO SIR)";
+        FontMetrics fmTitulo = g2d.getFontMetrics();
+        g2d.drawString(titulo, centerX - (fmTitulo.stringWidth(titulo) / 2), centerY - 60);
+
+        // Subtítulo descritivo
+        g2d.setFont(new Font("Arial", Font.PLAIN, 20));
+        g2d.setColor(new Color(200, 200, 200));
+        String subtitulo = "Sistema de Análise Estocástica e Processamento em Lote";
+        FontMetrics fmSub = g2d.getFontMetrics();
+        g2d.drawString(subtitulo, centerX - (fmSub.stringWidth(subtitulo) / 2), centerY - 15);
+
+        // Barra separadora
+        g2d.setColor(new Color(100, 100, 100));
+        g2d.drawLine(centerX - 250, centerY + 20, centerX + 250, centerY + 20);
+
+        // Informação de carregamento
+        g2d.setFont(new Font("Consolas", Font.PLAIN, 18));
+        g2d.setColor(Color.CYAN);
+        String info = String.format("A bateria irá processar e consolidar %d testes.", totalDeTestesNaBateria);
+        FontMetrics fmInfo = g2d.getFontMetrics();
+        g2d.drawString(info, centerX - (fmInfo.stringWidth(info) / 2), centerY + 65);
+
+        // O relógio da Intro
+        int segundosRestantes = (contadorIntro / (testeAtual != null ? testeAtual.fps : 60)) + 1;
+        g2d.setFont(new Font("Arial", Font.BOLD, 18));
+        g2d.setColor(Color.YELLOW);
+        String timerStr = "Iniciando em " + segundosRestantes + "s...";
+        FontMetrics fmTimer = g2d.getFontMetrics();
+        g2d.drawString(timerStr, centerX - (fmTimer.stringWidth(timerStr) / 2), centerY + 140);
+    }
 
     private void desenharHUD(Graphics2D g2d) {
         int suscetiveis = 0, infectados = 0, recuperados = 0, mortos = 0;
@@ -404,56 +464,70 @@ public class Arena extends JPanel {
         int painelLargura = 600, painelAltura = 480; 
         int x = (LARGURA - painelLargura) / 2;
         int y = (ALTURA - painelAltura) / 2;
+        
+        // Ponto de referência exato para o centro do painel!
+        int centroPainelX = x + (painelLargura / 2); 
 
         g2d.setColor(new Color(40, 44, 52));
         g2d.fillRoundRect(x, y, painelLargura, painelAltura, 30, 30);
         g2d.setColor(new Color(0, 255, 225));
         g2d.drawRoundRect(x, y, painelLargura, painelAltura, 30, 30);
 
+        // Título perfeitamente centralizado
         g2d.setColor(Color.WHITE);
         g2d.setFont(new Font("Arial", Font.BOLD, 20));
-        g2d.drawString("RESULTADOS MÉDIOS DO TESTE #" + testeAtual.id, x + 100, y + 50);
+        String titulo = "RESULTADOS MÉDIOS DO TESTE #" + testeAtual.id;
+        FontMetrics fmTitulo = g2d.getFontMetrics();
+        g2d.drawString(titulo, centroPainelX - (fmTitulo.stringWidth(titulo) / 2), y + 50);
 
         g2d.setFont(new Font("Arial", Font.PLAIN, 16));
         
+        // As duas colunas podem manter posições X fixas, pois alinham à esquerda na sua "metade"
         g2d.setColor(Color.CYAN);
-        g2d.drawString("PÚBLICO VACINADO (" + inicialVacinados + ")", x + 40, y + 110);
+        g2d.drawString("PÚBLICO VACINADO (" + inicialVacinados + ")", x + 50, y + 110);
         g2d.setColor(Color.WHITE);
-        g2d.drawString("- Ilesos: " + resultadoAtual.ilesosVac, x + 40, y + 140);
-        g2d.drawString("- Recuperados: " + resultadoAtual.recVac, x + 40, y + 170);
+        g2d.drawString("- Ilesos: " + resultadoAtual.ilesosVac, x + 50, y + 140);
+        g2d.drawString("- Recuperados: " + resultadoAtual.recVac, x + 50, y + 170);
         g2d.setColor(new Color(255, 100, 100)); 
-        g2d.drawString("- Óbitos: " + resultadoAtual.mortosVac, x + 40, y + 200);
+        g2d.drawString("- Óbitos: " + resultadoAtual.mortosVac, x + 50, y + 200);
 
         g2d.setColor(Color.BLUE);
-        g2d.drawString("NÃO VACINADOS (" + inicialNaoVacinados + ")", x + 300, y + 110);
+        g2d.drawString("NÃO VACINADOS (" + inicialNaoVacinados + ")", x + 320, y + 110);
         g2d.setColor(Color.WHITE);
-        g2d.drawString("- Ilesos: " + resultadoAtual.ilesosNaoVac, x + 300, y + 140);
-        g2d.drawString("- Recuperados: " + resultadoAtual.recNaoVac, x + 300, y + 170);
+        g2d.drawString("- Ilesos: " + resultadoAtual.ilesosNaoVac, x + 320, y + 140);
+        g2d.drawString("- Recuperados: " + resultadoAtual.recNaoVac, x + 320, y + 170);
         g2d.setColor(new Color(255, 100, 100));
-        g2d.drawString("- Óbitos: " + resultadoAtual.mortosNaoVac, x + 300, y + 200);
+        g2d.drawString("- Óbitos: " + resultadoAtual.mortosNaoVac, x + 320, y + 200);
 
         g2d.setColor(Color.LIGHT_GRAY);
         g2d.drawLine(x + 40, y + 240, x + 560, y + 240);
         
+        // Variação centralizada
         g2d.setColor(Color.ORANGE);
         g2d.setFont(new Font("Arial", Font.BOLD, 15));
-        g2d.drawString(String.format("VARIAÇÃO DE ÓBITOS: Mínimo (%d) | Média (%d) | Máximo (%d)", 
-                resultadoAtual.minMortos, resultadoAtual.mediaMortos, resultadoAtual.maxMortos), x + 45, y + 280);
+        String variacao = String.format("VARIAÇÃO DE ÓBITOS: Mínimo (%d) | Média (%d) | Máximo (%d)", 
+                resultadoAtual.minMortos, resultadoAtual.mediaMortos, resultadoAtual.maxMortos);
+        FontMetrics fmVar = g2d.getFontMetrics();
+        g2d.drawString(variacao, centroPainelX - (fmVar.stringWidth(variacao) / 2), y + 280);
         
+        // Texto de Origem centralizado
         g2d.setColor(Color.WHITE);
         g2d.setFont(new Font("Arial", Font.PLAIN, 14));
-        g2d.drawString("Origem: " + inicialInfectados + " Paciente(s) Zero excluído(s) da conta.", x + 100, y + 320);
+        String origem = "Origem: " + inicialInfectados + " Paciente(s) Zero excluído(s) da conta.";
+        FontMetrics fmOrigem = g2d.getFontMetrics();
+        g2d.drawString(origem, centroPainelX - (fmOrigem.stringWidth(origem) / 2), y + 320);
         
         int segundosRestantes = (contadorPausa / testeAtual.fps) + 1;
         g2d.setColor(Color.YELLOW);
         g2d.setFont(new Font("Arial", Font.BOLD, 18));
         
-        // A MUDANÇA DE MENSAGEM: Se a fila estiver vazia, avisa que são os resultados finais
+        // Timer centralizado dinamicamente
         String mensagemExibicao = filaTestes.isEmpty() 
-            ? "Iniciando resultados finais em " + segundosRestantes + "s..." 
+            ? "Apresentando resultados consolidados em " + segundosRestantes + "s..." 
             : "Iniciando próxima bateria em " + segundosRestantes + "s...";
             
-        g2d.drawString(mensagemExibicao, x + 110, y + 400);
+        FontMetrics fmMensagem = g2d.getFontMetrics();
+        g2d.drawString(mensagemExibicao, centroPainelX - (fmMensagem.stringWidth(mensagemExibicao) / 2), y + 400);
     }
 
     private void desenharTelaGlobal(Graphics2D g2d) {
@@ -558,6 +632,13 @@ public class Arena extends JPanel {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         
+        // A TELA DE INTRODUÇÃO
+        if (faseAtual == Fase.INTRO) {
+            desenharTelaIntro(g2d);
+            Toolkit.getDefaultToolkit().sync();
+            return; // Impede de desenhar o mapa e as bolinhas por baixo!
+        }
+        
         g2d.setColor(new Color(245, 245, 245));
         g2d.fillRect(0, 0, getWidth(), getHeight());
         
@@ -591,7 +672,6 @@ public class Arena extends JPanel {
             g2d.drawOval(x, y, diametro, diametro);
         }
 
-        // Desenha os Painéis normais
         if (faseAtual == Fase.SIMULANDO || faseAtual == Fase.TRANSIÇÃO_RODADA) {
             desenharHUD(g2d);
         } else if (faseAtual == Fase.PAUSA_MEDIANA) {
@@ -600,24 +680,20 @@ public class Arena extends JPanel {
             desenharTelaGlobal(g2d);
         }
         
-        // A MÁGICA VISUAL: Película do Fade In / Fade Out aplicável por cima do jogo (mas sob o HUD)
+        // FADE IN / FADE OUT
         if (faseAtual == Fase.TRANSIÇÃO_RODADA) {
             float ratio = 0f;
             int meioTempo = maxTransicao / 2;
             
             if (contadorTransicao > meioTempo) {
-                // Fade Out: A tela vai escurecendo de 0% a 100%
                 ratio = 1.0f - ((float)(contadorTransicao - meioTempo) / meioTempo);
             } else {
-                // Fade In: A tela clareia do 100% de volta a 0%
                 ratio = (float)contadorTransicao / meioTempo;
             }
-            
-            // Garante que o Alpha nunca saia do limite permitido (0.0 até 1.0)
             ratio = Math.max(0f, Math.min(1f, ratio));
             
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, ratio));
-            g2d.setColor(new Color(25, 28, 36)); // Usa a cor elegante do Dashboard para o fade
+            g2d.setColor(new Color(25, 28, 36)); 
             g2d.fillRect(0, 0, LARGURA, ALTURA);
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
         }
