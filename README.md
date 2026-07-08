@@ -12,6 +12,16 @@ A ferramenta opera como um analisador de dados estocástico (**Método de Monte 
 
 ---
 
+## ▶️ Apresentação em Vídeo
+
+Confira a demonstração completa do simulador, incluindo a explicação da arquitetura de software e a comprovação estatística da Imunidade de Rebanho através da execução em lote:
+
+[![Apresentação do Simulador SIR](https://img.youtube.com/vi/yRnUf2CfSLc/maxresdefault.jpg)](https://www.youtube.com/watch?v=yRnUf2CfSLc)
+
+*(Clique na imagem acima para assistir ao vídeo no YouTube)*
+
+---
+
 ## 📸 Demonstração Visual
 
 *(Abaixo estão as telas do simulador operando no Modo de Apresentação)*
@@ -48,6 +58,8 @@ O diagrama abaixo ilustra a estrutura Orientada a Objetos do simulador, demonstr
 <p align="center">
   <img src="assets/diagrama.png" width="80%" alt="Diagrama de Classes UML">
 </p>
+
+---
     
 ## 🛠️ Como Executar o Projeto
 
